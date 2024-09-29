@@ -1,11 +1,13 @@
 # Use the official Node.js 18 image as the base image
-# You can use a smaller image like 'alpine' for smaller builds
 FROM node:18-alpine AS base
 
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json to the container
+ENV NEXT_PUBLIC_BASE_URL=https://mitrphol-api-3.thetigerteamacademy.net
+ENV NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=AIzaSyBb8Ioejj1p4NKXJM1Fyo-xNAlztcA-1wM
+ENV REDIS=redis://:mitrphol2024@119.59.102.60:6379
+
 COPY package.json package-lock.json ./
 
 # Install dependencies
@@ -25,4 +27,3 @@ EXPOSE 3000
 
 # Start the Next.js application
 CMD ["npm", "start"]
-
