@@ -4,7 +4,7 @@ import Map from "@/components/Map";
 
 function MKS() {
   const [parsedData, setParsedData] = useState<Response | null>(null);
-  const [standardData, setStandardData] = useState<any[]>([]);
+  const [standardData, setStandardData] = useState<StandardEntity[]>([]);
   const [selectedYear, setSelectedYear] = useState<number>(2023);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("Emergence");
   const [selectedFields, setSelectedFields] = useState<string[]>([
@@ -82,7 +82,7 @@ function MKS() {
       Soilmoiture: 0,
     };
 
-    let count = {
+    const count = {
       NDVI: 0,
       NDWI: 0,
       GLI: 0,
@@ -279,3 +279,12 @@ export type MKSEntity = {
 export type Response = {
   mks_entities: MKSEntity[];
 };
+
+export interface StandardEntity {
+  StandardZone: string;
+  NDVI: number;
+  NDWI: number;
+  GLI: number;
+  Precipitation: number;
+  Soilmoiture: number;
+}

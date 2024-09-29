@@ -4,7 +4,7 @@ import Map from "@/components/Map";
 
 function MAC() {
   const [parsedData, setParsedData] = useState<Response | null>(null);
-  const [standardData, setStandardData] = useState<any[]>([]);
+  const [standardData, setStandardData] = useState<StandardEntity[]>([]);
   const [selectedYear, setSelectedYear] = useState<number>(2023);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("Emergence");
   const [selectedFields, setSelectedFields] = useState<string[]>([
@@ -14,7 +14,7 @@ function MAC() {
     "Precipitation",
     "Soilmoiture",
   ]);
-  const [selectAll, setSelectAll] = useState<boolean>(true); // New state for 'select all' checkbox
+  const [selectAll, setSelectAll] = useState<boolean>(true);
 
   const years = [2023, 2024];
   const periods = [
@@ -85,7 +85,7 @@ function MAC() {
       Soilmoiture: 0,
     };
 
-    let count = {
+    const count = {
       NDVI: 0,
       NDWI: 0,
       GLI: 0,
@@ -285,3 +285,12 @@ export type MACEntity = {
 export type Response = {
   mac_entities: MACEntity[];
 };
+
+export interface StandardEntity {
+  StandardZone: string;
+  NDVI: number;
+  NDWI: number;
+  GLI: number;
+  Precipitation: number;
+  Soilmoiture: number;
+}

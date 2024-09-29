@@ -3,8 +3,8 @@ import { useState, useEffect } from "react";
 import Map from "@/components/Map";
 
 function SB() {
-  const [parsedData, setParsedData] = useState<Response | null>(null);
-  const [standardData, setStandardData] = useState<any[]>([]);
+  const [parsedData, setParsedData] = useState<SBResponse | null>(null);
+  const [standardData, setStandardData] = useState<StandardEntity[]>([]);
   const [selectedYear, setSelectedYear] = useState<number>(2023);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("Emergence");
   const [selectedFields, setSelectedFields] = useState<string[]>([
@@ -24,6 +24,7 @@ function SB() {
     { label: "Maturity", startMonth: 10, endMonth: 12 },
   ];
 
+  // Fetch SB Data
   useEffect(() => {
     async function loadData() {
       const response = await fetch("/api/sb");
@@ -33,6 +34,7 @@ function SB() {
     loadData();
   }, []);
 
+  // Fetch Standard Data
   useEffect(() => {
     async function loadStandardData() {
       const response = await fetch(
@@ -44,6 +46,7 @@ function SB() {
     loadStandardData();
   }, []);
 
+  // Filter parsedData based on selected period and year
   const filteredData = parsedData
     ? parsedData.sb_entities.filter((item: SBEntity) => {
         const itemDate = new Date(item.Date);
@@ -61,6 +64,7 @@ function SB() {
       })
     : [];
 
+  // Group filtered data by Lat-Lon
   const groupedData: { [key: string]: SBEntity[] } = filteredData.reduce(
     (acc, item) => {
       const key = `${item.Lat}-${item.Lon}`;
@@ -73,6 +77,7 @@ function SB() {
     {} as { [key: string]: SBEntity[] }
   );
 
+  // Calculate averages for each group
   const calculateAverages = (data: SBEntity[]) => {
     const sum = {
       NDVI: 0,
@@ -82,7 +87,7 @@ function SB() {
       Soilmoiture: 0,
     };
 
-    let count = {
+    const count = {
       NDVI: 0,
       NDWI: 0,
       GLI: 0,
@@ -133,8 +138,9 @@ function SB() {
     };
   });
 
+  // Filter the standard data based on the selected period
   const filteredStandard = standardData.filter((standard) => {
-    return standard.StandardZone === selectedPeriod.split(" ")[0];
+    return standard.StandardZone === selectedPeriod;
   });
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,7 +187,7 @@ function SB() {
               {standardItem.GLI}
             </div>
             <div className="flex flex-1 flex-col justify-center items-center bg-gray-100 px-8 py-2 rounded-md shadow-sm">
-              <strong className="text-sky-400 font-bold">Precipication</strong>
+              <strong className="text-sky-400 font-bold">Precipitation</strong>
               {standardItem.Precipitation}
             </div>
             <div className="flex flex-1 flex-col justify-center items-center bg-gray-100 px-8 py-2 rounded-md shadow-sm">
@@ -263,7 +269,8 @@ function SB() {
 
 export default SB;
 
-export type SBEntity = {
+// Define types for SBEntity and Response
+export interface SBEntity {
   ID: number;
   NDVI: number;
   NDWI: number;
@@ -274,8 +281,17 @@ export type SBEntity = {
   Lat: number;
   Lon: number;
   Date: string;
-};
+}
 
-export type Response = {
+export interface SBResponse {
   sb_entities: SBEntity[];
-};
+}
+
+export interface StandardEntity {
+  StandardZone: string;
+  NDVI: number;
+  NDWI: number;
+  GLI: number;
+  Precipitation: number;
+  Soilmoiture: number;
+}

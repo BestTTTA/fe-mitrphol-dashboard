@@ -1,14 +1,14 @@
 import { createClient } from "redis";
 import { NextResponse } from "next/server";
 
-export async function fetchData() {
-  // // ใช้ Redis URL จากไฟล์ .env
+// Move fetchData to be an internal function
+async function fetchData() {
   const redisUrl = process.env.REDIS || 'redis://localhost:6379';
 
   const client = createClient({
     url: redisUrl, 
   });
-  // const client = createClient();
+
   await client.connect();
 
   const cacheKey = "mpdc_data";
@@ -29,6 +29,7 @@ export async function fetchData() {
   return JSON.parse(data);
 }
 
+// Export only the HTTP handler (GET in this case)
 export async function GET() {
   const data = await fetchData();
   return NextResponse.json(data);

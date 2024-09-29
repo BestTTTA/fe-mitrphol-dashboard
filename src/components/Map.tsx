@@ -1,9 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import {
-  GoogleMap,
-  Marker,
-  InfoWindow,
   useLoadScript,
 } from "@react-google-maps/api";
 
@@ -118,7 +115,7 @@ function Map({
                 ${selectedFields
                   .map((field) => `<p>${field}: ${item[field]}</p>`)
                   .join("")}
-                  <p style="padding: 10px; border-radius: 5px; font-weight: bold;">Lat: ${lat} | Lon: ${lon}</p>
+                   <p style="padding: 10px; border-radius: 5px; font-weight: bold;">Lat: ${lat} | Lon: ${lon}</p>
               </div>
             `,
           });
