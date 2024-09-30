@@ -5,11 +5,12 @@ const nextConfig = {
       {
         source: '/', 
         destination: '/zone/sb', 
-        permanent: false, 
+        permanent: true, 
       },
     ];
   },
+  
+  staticPageGenerationTimeout: 600,
 };
-
 
 export default nextConfig;
