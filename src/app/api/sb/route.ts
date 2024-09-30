@@ -1,48 +1,36 @@
 import { createClient } from "redis";
 import { NextResponse } from "next/server";
 
-async function fetchData(zone: string) {
+
+async function fetchData() {
   const redisUrl = process.env.REDIS || 'redis://localhost:6379';
 
   const client = createClient({
-    url: redisUrl,
+    url: redisUrl, 
   });
 
   await client.connect();
 
-  const cacheKey = `${zone}_data`;
+  const cacheKey = `sb_data`;
   let data = await client.get(cacheKey);
 
   if (!data) {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/${zone}/`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/sb/`, {
       next: { revalidate: 86400 },
     });
     const apiData = await response.json();
 
     await client.setEx(cacheKey, 86400, JSON.stringify(apiData));
 
-    data = JSON.stringify(apiData); // Convert to string
+    data = JSON.stringify(apiData);
   }
 
-  await client.quit(); // Ensure Redis connection is closed
-  return JSON.parse(data); // Return parsed JSON
+  await client.quit();
+  return JSON.parse(data);
 }
 
-// API route handler
-export async function GET(req: Request) {
-  try {
-    // Extracting zone from the request URL
-    const url = new URL(req.url);
-    const zone = url.pathname.split("/").pop(); // Get the last part of the path
 
-    if (!zone) {
-      return NextResponse.json({ error: "Zone not specified" }, { status: 400 });
-    }
-
-    const data = await fetchData(zone);
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error('Error fetching data:', error);
-    return NextResponse.json({ error: "Failed to fetch data" }, { status: 500 });
-  }
+export async function GET() {
+  const data = await fetchData();
+  return NextResponse.json(data);
 }
