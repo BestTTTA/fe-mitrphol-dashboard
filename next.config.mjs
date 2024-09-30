@@ -1,18 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    async redirects() {
-      return [
-        {
-          source: '/', 
-          destination: '/SB', 
-          permanent: true, 
-        },
-      ];
-    },
-    
-   
-    staticPageGenerationTimeout: 600,
-  };
-  
-  export default nextConfig;
-  
+  async redirects() {
+    return [
+      {
+        source: '/', 
+        destination: '/zone/sb', 
+        permanent: false, 
+      },
+    ];
+  },
+};
+
+export default nextConfig;

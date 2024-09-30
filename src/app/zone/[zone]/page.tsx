@@ -1,9 +1,9 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Map from "@/components/Map";
-
-function MPV() {
-  const [parsedData, setParsedData] = useState<Response | null>(null);
+import { usePathname } from "next/navigation";
+function SB() {
+  const [parsedData, setParsedData] = useState<SBResponse | null>(null);
   const [standardData, setStandardData] = useState<StandardEntity[]>([]);
   const [selectedYear, setSelectedYear] = useState<number>(2023);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("Emergence");
@@ -24,14 +24,24 @@ function MPV() {
     { label: "Maturity", startMonth: 10, endMonth: 12 },
   ];
 
+  const pathname = usePathname();
+  const zone = pathname.split("/").pop(); // Get the last part of the path
+
+  // Fetch data only once when the component mounts
   useEffect(() => {
     async function loadData() {
-      const response = await fetch("/api/mpv");
+      const response = await fetch(`/api/${zone}`);
       const data = await response.json();
-      setParsedData(data);
+      setParsedData(data); 
     }
-    loadData();
-  }, []);
+
+
+    if (!dataFetchedRef.current) {
+      loadData();
+      dataFetchedRef.current = true;
+    }
+  }, [zone]); 
+
 
   useEffect(() => {
     async function loadStandardData() {
@@ -41,18 +51,31 @@ function MPV() {
       const data = await response.json();
       setStandardData(data.standard_entities);
     }
-    loadStandardData();
-  }, []);
 
+
+    if (!standardDataFetchedRef.current) {
+      loadStandardData();
+      standardDataFetchedRef.current = true;
+    }
+  }, []); 
+
+ 
+  const dataFetchedRef = useRef(false);
+  const standardDataFetchedRef = useRef(false);
+
+ 
   const filteredData = parsedData
-    ? parsedData.mpv_entities.filter((item: MPVEntity) => {
+    ? parsedData[`${zone}_entities`].filter((item: SBEntity) => {
         const itemDate = new Date(item.Date);
         const year = itemDate.getFullYear();
         const month = itemDate.getMonth() + 1;
+
         const selectedPeriodObj = periods.find(
           (period) => period.label === selectedPeriod
         );
+
         if (!selectedPeriodObj) return false;
+
         return (
           year === selectedYear &&
           month >= selectedPeriodObj.startMonth &&
@@ -61,7 +84,8 @@ function MPV() {
       })
     : [];
 
-  const groupedData: { [key: string]: MPVEntity[] } = filteredData.reduce(
+  
+  const groupedData: { [key: string]: SBEntity[] } = filteredData.reduce(
     (acc, item) => {
       const key = `${item.Lat}-${item.Lon}`;
       if (!acc[key]) {
@@ -70,10 +94,11 @@ function MPV() {
       acc[key].push(item);
       return acc;
     },
-    {} as { [key: string]: MPVEntity[] }
+    {} as { [key: string]: SBEntity[] }
   );
 
-  const calculateAverages = (data: MPVEntity[]) => {
+  
+  const calculateAverages = useCallback((data: SBEntity[]) => {
     const sum = {
       NDVI: 0,
       NDWI: 0,
@@ -122,7 +147,7 @@ function MPV() {
       Soilmoiture:
         count.Soilmoiture > 0 ? sum.Soilmoiture / count.Soilmoiture : 0,
     };
-  };
+  }, []);
 
   const calculatedAverages = Object.keys(groupedData).map((key) => {
     const group = groupedData[key];
@@ -134,7 +159,7 @@ function MPV() {
   });
 
   const filteredStandard = standardData.filter((standard) => {
-    return standard.StandardZone === selectedPeriod.split(" ")[0];
+    return standard.StandardZone === selectedPeriod;
   });
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,7 +206,7 @@ function MPV() {
               {standardItem.GLI}
             </div>
             <div className="flex flex-1 flex-col justify-center items-center bg-gray-100 px-8 py-2 rounded-md shadow-sm">
-              <strong className="text-sky-400 font-bold">Precipication</strong>
+              <strong className="text-sky-400 font-bold">Precipitation</strong>
               {standardItem.Precipitation}
             </div>
             <div className="flex flex-1 flex-col justify-center items-center bg-gray-100 px-8 py-2 rounded-md shadow-sm">
@@ -250,7 +275,6 @@ function MPV() {
           </div>
         </div>
       </div>
-
       <Map
         data={calculatedAverages}
         standard={filteredStandard}
@@ -261,9 +285,9 @@ function MPV() {
   );
 }
 
-export default MPV;
+export default SB;
 
-export type MPVEntity = {
+export interface SBEntity {
   ID: number;
   NDVI: number;
   NDWI: number;
@@ -274,11 +298,11 @@ export type MPVEntity = {
   Lat: number;
   Lon: number;
   Date: string;
-};
+}
 
-export type Response = {
-  mpv_entities: MPVEntity[];
-};
+export interface SBResponse {
+  sb_entities: SBEntity[];
+}
 
 export interface StandardEntity {
   StandardZone: string;
