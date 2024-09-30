@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
-import Map from "@/components/Map";
+import Map from "../../../components/Map";
 import { usePathname } from "next/navigation";
 import StandardItemCard from "@/components/Standard";
 function SB() {
