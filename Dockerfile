@@ -19,5 +19,6 @@ COPY . .
 # Install a lightweight HTTP server for serving static files
 RUN npm install -g serve
 
+EXPOSE 3000
 # Serve the Next.js app
-CMD ["serve", "-s", "out"]
+CMD ["npm", "start"]
