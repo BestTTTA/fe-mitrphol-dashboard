@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Map from "@/components/Map";
 import { usePathname } from "next/navigation";
+import StandardItemCard from "@/components/Standard";
 function SB() {
   const [parsedData, setParsedData] = useState<SBResponse | null>(null);
   const [standardData, setStandardData] = useState<StandardEntity[]>([]);
@@ -32,16 +33,14 @@ function SB() {
     async function loadData() {
       const response = await fetch(`/api/${zone}`);
       const data = await response.json();
-      setParsedData(data); 
+      setParsedData(data);
     }
-
 
     if (!dataFetchedRef.current) {
       loadData();
       dataFetchedRef.current = true;
     }
-  }, [zone]); 
-
+  }, [zone]);
 
   useEffect(() => {
     async function loadStandardData() {
@@ -52,18 +51,15 @@ function SB() {
       setStandardData(data.standard_entities);
     }
 
-
     if (!standardDataFetchedRef.current) {
       loadStandardData();
       standardDataFetchedRef.current = true;
     }
-  }, []); 
+  }, []);
 
- 
   const dataFetchedRef = useRef(false);
   const standardDataFetchedRef = useRef(false);
 
- 
   const filteredData = parsedData
     ? parsedData[`${zone}_entities`].filter((item: SBEntity) => {
         const itemDate = new Date(item.Date);
@@ -84,7 +80,6 @@ function SB() {
       })
     : [];
 
-  
   const groupedData: { [key: string]: SBEntity[] } = filteredData.reduce(
     (acc, item) => {
       const key = `${item.Lat}-${item.Lon}`;
@@ -97,7 +92,6 @@ function SB() {
     {} as { [key: string]: SBEntity[] }
   );
 
-  
   const calculateAverages = useCallback((data: SBEntity[]) => {
     const sum = {
       NDVI: 0,
@@ -185,6 +179,8 @@ function SB() {
     }
   };
 
+
+
   return (
     <main className="w-full p-4">
       <h2 className="mt-4 mb-2 text-center font-bold text-sky-500 text-4xl">
@@ -192,28 +188,7 @@ function SB() {
       </h2>
       {filteredStandard.length > 0 ? (
         filteredStandard.map((standardItem, index) => (
-          <div key={index} className="flex w-full gap-4 justify-evenly">
-            <div className="flex flex-1 flex-col justify-center items-center bg-gray-100 px-8 py-2 rounded-md shadow-sm">
-              <strong className="text-sky-400 font-bold">NDVI</strong>
-              {standardItem.NDVI}
-            </div>
-            <div className="flex flex-1 flex-col justify-center items-center bg-gray-100 px-8 py-2 rounded-md shadow-sm">
-              <strong className="text-sky-400 font-bold">NDWI</strong>
-              {standardItem.NDWI}
-            </div>
-            <div className="flex flex-1 flex-col justify-center items-center bg-gray-100 px-8 py-2 rounded-md shadow-sm">
-              <strong className="text-sky-400 font-bold">GLI</strong>
-              {standardItem.GLI}
-            </div>
-            <div className="flex flex-1 flex-col justify-center items-center bg-gray-100 px-8 py-2 rounded-md shadow-sm">
-              <strong className="text-sky-400 font-bold">Precipitation</strong>
-              {standardItem.Precipitation}
-            </div>
-            <div className="flex flex-1 flex-col justify-center items-center bg-gray-100 px-8 py-2 rounded-md shadow-sm">
-              <strong className="text-sky-400 font-bold">Soilmoisture</strong>
-              {standardItem.Soilmoiture}
-            </div>
-          </div>
+          <StandardItemCard key={index} standardItem={standardItem} index={index} />
         ))
       ) : (
         <p>Not found standard.</p>
