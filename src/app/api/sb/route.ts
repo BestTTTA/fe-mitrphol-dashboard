@@ -1,7 +1,6 @@
 import { createClient } from "redis";
 import { NextResponse } from "next/server";
 
-
 async function fetchData() {
   const redisUrl = process.env.REDIS || 'redis://localhost:6379';
 
@@ -9,7 +8,18 @@ async function fetchData() {
     url: redisUrl, 
   });
 
-  await client.connect();
+  try {
+    // Try connecting to Redis
+    await client.connect();
+  } catch (error) {
+    console.error("Failed to connect to Redis:", error);
+    // Fallback: If Redis fails, fetch data from API directly
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/sb/`, {
+      next: { revalidate: 86400 },
+    });
+    const apiData = await response.json();
+    return apiData; // Return API data directly if Redis is unavailable
+  }
 
   const cacheKey = `sb_data`;
   let data = await client.get(cacheKey);
@@ -28,7 +38,6 @@ async function fetchData() {
   await client.quit();
   return JSON.parse(data);
 }
-
 
 export async function GET() {
   const data = await fetchData();
