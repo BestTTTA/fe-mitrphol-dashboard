@@ -3,8 +3,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Map from "../../../components/Map";
 import { usePathname } from "next/navigation";
 import StandardItemCard from "@/components/Standard";
-function SB() {
-  const [parsedData, setParsedData] = useState<SBResponse | null>(null);
+function Zone() {
+  const [parsedData, setParsedData] = useState<Response | null>(null);
   const [standardData, setStandardData] = useState<StandardEntity[]>([]);
   const [selectedYear, setSelectedYear] = useState<number>(2023);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("Emergence");
@@ -61,7 +61,7 @@ function SB() {
   const standardDataFetchedRef = useRef(false);
 
   const filteredData = parsedData
-    ? parsedData[`${zone}_entities`].filter((item: SBEntity) => {
+    ? parsedData[`${zone}_entities`].filter((item: Entity) => {
         const itemDate = new Date(item.Date);
         const year = itemDate.getFullYear();
         const month = itemDate.getMonth() + 1;
@@ -80,7 +80,7 @@ function SB() {
       })
     : [];
 
-  const groupedData: { [key: string]: SBEntity[] } = filteredData.reduce(
+  const groupedData: { [key: string]: Entity[] } = filteredData.reduce(
     (acc, item) => {
       const key = `${item.Lat}-${item.Lon}`;
       if (!acc[key]) {
@@ -89,10 +89,10 @@ function SB() {
       acc[key].push(item);
       return acc;
     },
-    {} as { [key: string]: SBEntity[] }
+    {} as { [key: string]: Entity[] }
   );
 
-  const calculateAverages = useCallback((data: SBEntity[]) => {
+  const calculateAverages = useCallback((data: Entity[]) => {
     const sum = {
       NDVI: 0,
       NDWI: 0,
@@ -260,9 +260,9 @@ function SB() {
   );
 }
 
-export default SB;
+export default Zone;
 
-export interface SBEntity {
+export interface Entity {
   ID: number;
   NDVI: number;
   NDWI: number;
@@ -275,8 +275,8 @@ export interface SBEntity {
   Date: string;
 }
 
-export interface SBResponse {
-  sb_entities: SBEntity[];
+export interface Response {
+  sb_entities: Entity[];
 }
 
 export interface StandardEntity {
