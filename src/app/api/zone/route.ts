@@ -53,7 +53,14 @@ export async function GET(request: Request) {
   try {
     // Fetch data using the fetchData function
     const data = await fetchData(zone);
-    return NextResponse.json(data);
+    
+    // Set CORS headers
+    const response = NextResponse.json(data);
+    response.headers.set("Access-Control-Allow-Origin", "*"); // Allow all origins
+    response.headers.set("Access-Control-Allow-Methods", "GET,OPTIONS"); // Allow specific methods
+    response.headers.set("Access-Control-Allow-Headers", "Content-Type"); // Allow specific headers
+
+    return response;
   } catch (error: any) {
     // Return error if fetching fails
     return NextResponse.json({ error: error.message }, { status: 500 });
