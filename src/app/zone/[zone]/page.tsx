@@ -3,9 +3,12 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Map from "../../../components/Map";
 import { usePathname } from "next/navigation";
 import StandardItemCard from "@/components/Standard";
+
 function Zone() {
   const [parsedData, setParsedData] = useState<Response | null>(null);
   const [standardData, setStandardData] = useState<StandardEntity[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [standardLoading, setStandardLoading] = useState<boolean>(true);
   const [selectedYear, setSelectedYear] = useState<number>(2023);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("Emergence");
   const [selectedFields, setSelectedFields] = useState<string[]>([
@@ -26,17 +29,26 @@ function Zone() {
   ];
 
   const pathname = usePathname();
-  const zone = pathname.split("/").pop(); // Get the last part of the path
+  const zone = pathname.split("/").pop();
 
-  // Fetch data only once when the component mounts
+  const dataFetchedRef = useRef(false);
+  const standardDataFetchedRef = useRef(false);
+
   useEffect(() => {
     async function loadData() {
-      const response = await fetch(`/api/${zone}`);
-      const data = await response.json();
-      setParsedData(data);
+      try {
+        const response = await fetch(`/api/zone?zone=${zone}`);
+        const data = await response.json();
+        setParsedData(data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    if (!dataFetchedRef.current) {
+    if (!dataFetchedRef.current && zone) {
+      setLoading(true);
       loadData();
       dataFetchedRef.current = true;
     }
@@ -44,21 +56,25 @@ function Zone() {
 
   useEffect(() => {
     async function loadStandardData() {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/standard/`
-      );
-      const data = await response.json();
-      setStandardData(data.standard_entities);
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/standard/`
+        );
+        const data = await response.json();
+        setStandardData(data.standard_entities);
+      } catch (error) {
+        console.error("Error fetching standard data:", error);
+      } finally {
+        setStandardLoading(false);
+      }
     }
 
     if (!standardDataFetchedRef.current) {
+      setStandardLoading(true);
       loadStandardData();
       standardDataFetchedRef.current = true;
     }
   }, []);
-
-  const dataFetchedRef = useRef(false);
-  const standardDataFetchedRef = useRef(false);
 
   const filteredData = parsedData
     ? parsedData[`${zone}_entities`].filter((item: Entity) => {
@@ -93,65 +109,66 @@ function Zone() {
   );
 
   const calculateAverages = useCallback((data: Entity[]) => {
-    const sum = {
+    const sum: { [key: string]: number } = {
       NDVI: 0,
       NDWI: 0,
       GLI: 0,
       Precipitation: 0,
       Soilmoiture: 0,
     };
-
-    const count = {
+  
+    const count: { [key: string]: number } = {
       NDVI: 0,
       NDWI: 0,
       GLI: 0,
       Precipitation: 0,
       Soilmoiture: 0,
     };
-
+  
     data.forEach((item) => {
-      if (item.NDVI) {
+      // ตรวจสอบค่าที่ถูกเลือกใน selectedFields และคำนวณเฉพาะค่าที่ถูกเลือก
+      if (selectedFields.includes("NDVI") && item.NDVI) {
         sum.NDVI += parseFloat(item.NDVI.toString());
         count.NDVI += 1;
       }
-      if (item.NDWI) {
+      if (selectedFields.includes("NDWI") && item.NDWI) {
         sum.NDWI += parseFloat(item.NDWI.toString());
         count.NDWI += 1;
       }
-      if (item.GLI) {
+      if (selectedFields.includes("GLI") && item.GLI) {
         sum.GLI += parseFloat(item.GLI.toString());
         count.GLI += 1;
       }
-      if (item.Precipitation) {
+      if (selectedFields.includes("Precipitation") && item.Precipitation) {
         sum.Precipitation += parseFloat(item.Precipitation.toString());
         count.Precipitation += 1;
       }
-      if (item.Soilmoiture) {
+      if (selectedFields.includes("Soilmoiture") && item.Soilmoiture) {
         sum.Soilmoiture += parseFloat(item.Soilmoiture.toString());
         count.Soilmoiture += 1;
       }
     });
-
+  
+    // คืนค่าเฉลี่ยเฉพาะค่าที่ถูกเลือก
     return {
       NDVI: count.NDVI > 0 ? sum.NDVI / count.NDVI : 0,
       NDWI: count.NDWI > 0 ? sum.NDWI / count.NDWI : 0,
       GLI: count.GLI > 0 ? sum.GLI / count.GLI : 0,
-      Precipitation:
-        count.Precipitation > 0 ? sum.Precipitation / count.Precipitation : 0,
-      Soilmoiture:
-        count.Soilmoiture > 0 ? sum.Soilmoiture / count.Soilmoiture : 0,
+      Precipitation: count.Precipitation > 0 ? sum.Precipitation / count.Precipitation : 0,
+      Soilmoiture: count.Soilmoiture > 0 ? sum.Soilmoiture / count.Soilmoiture : 0,
     };
-  }, []);
+  }, [selectedFields]); // เพิ่ม selectedFields เข้าไปใน dependency array
+  
 
   const calculatedAverages = Object.keys(groupedData).map((key) => {
     const group = groupedData[key];
-    const averageValues = calculateAverages(group);
+    const averageValues = calculateAverages(group); // ส่งผ่านข้อมูลที่ถูกคำนวณค่าเฉลี่ย
     return {
       latLon: key,
       ...averageValues,
     };
   });
-
+  
   const filteredStandard = standardData.filter((standard) => {
     return standard.StandardZone === selectedPeriod;
   });
@@ -172,23 +189,32 @@ function Zone() {
   };
 
   const handleFieldSelect = (field: string) => {
-    if (selectedFields.includes(field)) {
-      setSelectedFields((prev) => prev.filter((f) => f !== field));
-    } else {
-      setSelectedFields((prev) => [...prev, field]);
-    }
+    // Toggle field selection
+    setSelectedFields((prevFields) => {
+      if (prevFields.includes(field)) {
+        return prevFields.filter((f) => f !== field); // Remove the field if already selected
+      } else {
+        return [...prevFields, field]; // Add the field if not selected
+      }
+    });
   };
-
-
+  
 
   return (
     <main className="w-full p-4">
       <h2 className="mt-4 mb-2 text-center font-bold text-sky-500 text-4xl">
         Standard
       </h2>
-      {filteredStandard.length > 0 ? (
+
+      {standardLoading ? (
+        <p>Loading standard data...</p>
+      ) : filteredStandard.length > 0 ? (
         filteredStandard.map((standardItem, index) => (
-          <StandardItemCard key={index} standardItem={standardItem} index={index} />
+          <StandardItemCard
+            key={index}
+            standardItem={filteredStandard}
+            index={index}
+          />
         ))
       ) : (
         <p>Not found standard.</p>
@@ -250,12 +276,21 @@ function Zone() {
           </div>
         </div>
       </div>
-      <Map
-        data={calculatedAverages}
-        standard={filteredStandard}
-        selectedFields={selectedFields}
-        period={selectedPeriod}
-      />
+      {loading ? (
+        <div className="flex w-full h-[700px] gap-4">
+          <div className="w-[100%] h-full bg-sky-200 animate-pulse rounded-md flex justify-center items-center">
+            <p className="text-2xl text-sky-600">กำลังเตรียมพร้อมข้อมูล...</p>
+          </div>
+          <div className="w-[20%] h-full bg-sky-200 animate-pulse rounded-md"></div>
+        </div>
+      ) : (
+        <Map
+          data={calculatedAverages}
+          standard={filteredStandard}
+          selectedFields={selectedFields}
+          period={selectedPeriod}
+        />
+      )}
     </main>
   );
 }

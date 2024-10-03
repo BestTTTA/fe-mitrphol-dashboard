@@ -1,16 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CiEdit } from "react-icons/ci";
 import { IoIosSave } from "react-icons/io";
+
 const StandardItemCard = ({ standardItem, index }) => {
+  const [id, setID] = useState(standardItem.ID);
   const [ndvi, setNDVI] = useState(standardItem.NDVI);
   const [ndwi, setNDWI] = useState(standardItem.NDWI);
   const [gli, setGLI] = useState(standardItem.GLI);
-  const [precipitation, setPrecipitation] = useState(
-    standardItem.Precipitation
-  );
+  const [precipitation, setPrecipitation] = useState(standardItem.Precipitation);
   const [soilmoiture, setSoilmoiture] = useState(standardItem.Soilmoiture);
 
-  // State to track if we are in "edit" mode for each field
   const [isEditing, setIsEditing] = useState({
     ndvi: false,
     ndwi: false,
@@ -19,10 +18,22 @@ const StandardItemCard = ({ standardItem, index }) => {
     soilmoiture: false,
   });
 
+  useEffect(() => {
+    if (standardItem.length > 0) {
+      const item = standardItem[0]; 
+      setID(item.ID)
+      setNDVI(item.NDVI);
+      setNDWI(item.NDWI);
+      setGLI(item.GLI);
+      setPrecipitation(item.Precipitation);
+      setSoilmoiture(item.Soilmoiture);
+    }
+  }, [standardItem]);
+
   async function updateStandard(attribute, value) {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/standard/${standardItem.ID}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/standard/${id}`,
         {
           method: "PATCH",
           headers: {
@@ -41,10 +52,9 @@ const StandardItemCard = ({ standardItem, index }) => {
       const updatedData = await response.json();
       console.log("Updated successfully", updatedData);
 
-      // After update, exit edit mode for the specific field
       setIsEditing((prevState) => ({
         ...prevState,
-        [attribute]: false,
+        [attribute.toLowerCase()]: false, 
       }));
     } catch (error) {
       console.error("Error updating standard item:", error);
@@ -70,9 +80,9 @@ const StandardItemCard = ({ standardItem, index }) => {
           {isEditing.ndvi ? (
             <button
               className="text-2xl"
-              onClick={() => updateStandard("ndvi", ndvi)}
+              onClick={() => updateStandard("NDVI", ndvi)}  // Capitalize "NDVI" to match your key
             >
-            <IoIosSave size={30}/>
+              <IoIosSave size={30} />
             </button>
           ) : (
             <button
@@ -104,9 +114,9 @@ const StandardItemCard = ({ standardItem, index }) => {
           {isEditing.ndwi ? (
             <button
               className="text-2xl"
-              onClick={() => updateStandard("ndwi", ndwi)}
+              onClick={() => updateStandard("NDWI", ndwi)}  // Capitalize "NDWI" to match your key
             >
-              <IoIosSave size={30}/>
+              <IoIosSave size={30} />
             </button>
           ) : (
             <button
@@ -138,9 +148,9 @@ const StandardItemCard = ({ standardItem, index }) => {
           {isEditing.gli ? (
             <button
               className="text-2xl"
-              onClick={() => updateStandard("gli", gli)}
+              onClick={() => updateStandard("GLI", gli)}  // Capitalize "GLI" to match your key
             >
-              <IoIosSave size={30}/>
+              <IoIosSave size={30} />
             </button>
           ) : (
             <button
@@ -172,9 +182,9 @@ const StandardItemCard = ({ standardItem, index }) => {
           {isEditing.precipitation ? (
             <button
               className="text-2xl"
-              onClick={() => updateStandard("precipitation", precipitation)}
+              onClick={() => updateStandard("Precipitation", precipitation)}  // Capitalize "Precipitation"
             >
-              <IoIosSave size={30}/>
+              <IoIosSave size={30} />
             </button>
           ) : (
             <button
@@ -206,9 +216,9 @@ const StandardItemCard = ({ standardItem, index }) => {
           {isEditing.soilmoiture ? (
             <button
               className="text-2xl"
-              onClick={() => updateStandard("soilmoiture", soilmoiture)}
+              onClick={() => updateStandard("Soilmoiture", soilmoiture)}  // Capitalize "Soilmoiture"
             >
-              <IoIosSave size={30}/>
+              <IoIosSave size={30} />
             </button>
           ) : (
             <button

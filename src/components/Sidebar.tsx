@@ -8,7 +8,7 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="w-80 h-dvh border p-4">
+    <div className="w-80 h-dvh p-4">
       <div className="w-full flex justify-center">
         <Image
           src="/mitrphol-logo-26F9A6C8DE-seeklogo.com.png"

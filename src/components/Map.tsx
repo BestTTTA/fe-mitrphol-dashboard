@@ -1,8 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import {
-  useLoadScript,
-} from "@react-google-maps/api";
+import { useLoadScript } from "@react-google-maps/api";
 
 declare global {
   interface Window {
@@ -35,9 +33,10 @@ function Map({
       std.StandardZone.trim().toLowerCase() === period.trim().toLowerCase()
   );
 
+ 
   useEffect(() => {
     if (!isLoaded || loadError) return;
-
+  
     const initializeMap = () => {
       if (mapRef.current && window.google && window.google.maps) {
         const map = new window.google.maps.Map(mapRef.current, {
@@ -45,58 +44,60 @@ function Map({
           zoom: 8,
           mapTypeId: "satellite",
         });
-
+  
         let greater = 0;
         let less = 0;
         let equal = 0;
-
+  
         data.forEach((item) => {
           const [lat, lon] = item.latLon.split("-").map(parseFloat);
-
+  
           const cleanPeriod = period.trim().toLowerCase();
           const matchingStandard = standard.find(
             (std) => std.StandardZone.trim().toLowerCase() === cleanPeriod
           );
-
-          let color = "red";
-
+  
+          let isGreaterThanStandard = false;
+          let isLessThanStandard = false;
+          let isEqualToStandard = true; // เริ่มต้นว่าเท่ากับมาตรฐาน
+  
           if (matchingStandard) {
-            let isGreaterThanStandard = false;
-            let isLessThanStandard = false;
-            let isEqualToStandard = true;
-
-            for (const field of selectedFields) {
+            // ตรวจสอบฟิลด์ทุกฟิลด์ใน selectedFields
+            selectedFields.forEach((field) => {
               if (
                 item[field] !== undefined &&
                 matchingStandard[field] !== undefined
               ) {
                 const itemValue = parseFloat(item[field]);
                 const standardValue = parseFloat(matchingStandard[field]);
-
+  
+                // ถ้าค่ามากกว่ามาตรฐาน
                 if (itemValue > standardValue) {
                   isGreaterThanStandard = true;
                   isEqualToStandard = false;
-                  break;
-                } else if (itemValue < standardValue) {
+                }
+                // ถ้าค่าน้อยกว่ามาตรฐาน
+                else if (itemValue < standardValue) {
                   isLessThanStandard = true;
                   isEqualToStandard = false;
-                  break;
                 }
               }
-            }
-
-            if (isGreaterThanStandard) {
-              color = "green";
-              greater++;
-            } else if (isLessThanStandard) {
-              color = "red";
-              less++;
-            } else if (isEqualToStandard) {
-              color = "yellow";
-              equal++;
-            }
+            });
           }
-
+  
+          // กำหนดสี marker ตามผลการเปรียบเทียบฟิลด์ทั้งหมด
+          let color = "yellow"; // เริ่มต้นว่าเท่ากับมาตรฐาน
+          if (isGreaterThanStandard && !isLessThanStandard) {
+            color = "green"; // มีฟิลด์มากกว่ามาตรฐาน แต่ไม่มีฟิลด์น้อยกว่า
+            greater++;
+          } else if (isLessThanStandard) {
+            color = "red"; // มีฟิลด์ที่น้อยกว่ามาตรฐาน
+            less++;
+          } else if (isEqualToStandard) {
+            color = "yellow"; // เท่ากับมาตรฐาน
+            equal++;
+          }
+  
           const marker = new window.google.maps.Marker({
             position: { lat, lng: lon },
             map,
@@ -108,33 +109,38 @@ function Map({
                 ? "http://maps.google.com/mapfiles/ms/icons/yellow-dot.png"
                 : "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
           });
-
+  
           const infoWindow = new window.google.maps.InfoWindow({
             content: `
               <div>
                 ${selectedFields
                   .map((field) => `<p>${field}: ${item[field]}</p>`)
                   .join("")}
-                   <p style="padding: 10px; border-radius: 5px; font-weight: bold;">Lat: ${lat} | Lon: ${lon}</p>
+                <p style="padding: 10px; border-radius: 5px; font-weight: bold;">Lat: ${lat} | Lon: ${lon}</p>
               </div>
             `,
           });
-
+  
           marker.addListener("click", () => {
             infoWindow.open(map, marker);
           });
         });
-
+  
         setGreaterCount(greater);
         setLessCount(less);
         setEqualCount(equal);
       }
     };
-
+  
     initializeMap();
   }, [isLoaded, loadError, data, standard, selectedFields, period]);
+  
 
-  if (!isLoaded) return <div>Loading Google Maps...</div>;
+  if (!isLoaded) return;
+  <div className="flex w-full h-[600px] gap-4">
+    <div className="w-[100%] h-full bg-sky-200 animate-pulse rounded-md"></div>
+    <div className="w-[20%] h-full bg-sky-200 animate-pulse rounded-md"></div>
+  </div>;
   if (loadError)
     return <div>Error loading Google Maps: {loadError.message}</div>;
 
@@ -148,7 +154,7 @@ function Map({
   return (
     <div className="flex w-full h-full">
       <div className="w-full mt-3">
-        <div ref={mapRef} style={{ width: "100%", height: "700px" }} />
+        <div ref={mapRef} style={{ width: "100%", height: "600px" }}  className="rounded-md shadow-md drop-shadow-sm"/>
       </div>
       <div className="w-[20%] p-4 flex flex-col items-center">
         <div className="w-full flex flex-col justify-center items-center p-2">
