@@ -1,11 +1,19 @@
 import { createClient } from "redis";
 import { NextResponse } from "next/server";
 
+// Helper function to create a timeout for fetch
+function timeout(ms: number) {
+  return new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("Request timed out")), ms)
+  );
+}
+
 // Fetch data from Redis or external API and cache it
 async function fetchData(zone: string) {
   const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
   const client = createClient({ url: redisUrl });
   const cacheKey = `${zone}_data`;
+  const fetchTimeout = 60000; // Set timeout to 5 seconds
 
   try {
     // Connect to Redis
@@ -15,12 +23,14 @@ async function fetchData(zone: string) {
     const cachedData = await client.get(cacheKey);
 
     if (cachedData) {
-      return JSON.parse(cachedData); 
+      return JSON.parse(cachedData);
     }
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/${zone}`, {
-      cache: 'no-store'
-    });
+    // Fetch data from external API with timeout
+    const response = (await Promise.race([
+      fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/${zone}`, { cache: 'no-store' }),
+      timeout(fetchTimeout),
+    ])) as Response; // <-- Type assertion
 
     if (!response.ok) {
       throw new Error(`Failed to fetch data from external API: ${response.statusText}`);
@@ -41,6 +51,7 @@ async function fetchData(zone: string) {
   }
 }
 
+
 // API Route handler
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -53,14 +64,7 @@ export async function GET(request: Request) {
   try {
     // Fetch data using the fetchData function
     const data = await fetchData(zone);
-    
-    // Set CORS headers
-    const response = NextResponse.json(data);
-    response.headers.set("Access-Control-Allow-Origin", "*"); // Allow all origins
-    response.headers.set("Access-Control-Allow-Methods", "GET,OPTIONS"); // Allow specific methods
-    response.headers.set("Access-Control-Allow-Headers", "Content-Type"); // Allow specific headers
-
-    return response;
+    return NextResponse.json(data);
   } catch (error: any) {
     // Return error if fetching fails
     return NextResponse.json({ error: error.message }, { status: 500 });
