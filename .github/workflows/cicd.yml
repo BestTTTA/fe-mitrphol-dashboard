@@ -64,8 +64,8 @@ jobs:
 
           sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $SSH_USERNAME@$SERVER_IP "
             docker pull $DOCKER_IMAGE && 
-            docker stop fe-mitrphol-dashboard || true && 
-            docker rm fe-mitrphol-dashboard || true && 
+            docker stop fe-mitrphol-dashboard && 
+            docker rm fe-mitrphol-dashboard && 
             docker run -d --name fe-mitrphol-dashboard -p 3000:3000 \
               --restart unless-stopped \
               -e NEXT_PUBLIC_BASE_URL=\"$NEXT_PUBLIC_BASE_URL\" \
