@@ -17,6 +17,11 @@ jobs:
         image: redis
         ports:
           - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
 
     steps:
       - name: Checkout code
@@ -58,13 +63,20 @@ jobs:
           echo "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"
           echo "REDIS=$REDIS"
 
-          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SERVER_IP "
+          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $SSH_USERNAME@$SERVER_IP "
+            # Pull the latest Docker image
             docker pull $DOCKER_IMAGE && 
+            # Stop and remove the existing container if it exists
             docker stop fe-mitrphol-dashboard || true && 
             docker rm fe-mitrphol-dashboard || true && 
+            # Run the new container with environment variables and automatic restart
             docker run -d --name fe-mitrphol-dashboard -p 3000:3000 \
+              --restart unless-stopped \
               -e NEXT_PUBLIC_BASE_URL=\"$NEXT_PUBLIC_BASE_URL\" \
               -e NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=\"$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY\" \
               -e REDIS=\"$REDIS\" \
               $DOCKER_IMAGE
           "
+
+          # Optional: Clean up old images
+          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $SSH_USERNAME@$SERVER_IP "docker image prune -f"
