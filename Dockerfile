@@ -7,6 +7,10 @@ WORKDIR /app
 # Copy package.json and package-lock.json into the working directory.
 COPY package.json package-lock.json ./
 
+ENV NEXT_PUBLIC_BASE_URL=https://mitrphol-api-3.thetigerteamacademy.net
+ENV NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=AIzaSyBb8Ioejj1p4NKXJM1Fyo-xNAlztcA-1wM
+ENV REDIS_URL=redis://:mitrphol2024@119.59.102.60:6379
+
 # Install all dependencies.
 RUN npm install
 
