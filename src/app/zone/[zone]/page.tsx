@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Map from "../../../components/Map";
 import { usePathname } from "next/navigation";
 import StandardItemCard from "@/components/Standard";
+import Link from "next/link";
 
 function Zone() {
   const [parsedData, setParsedData] = useState<Response | null>(null);
@@ -189,12 +190,11 @@ function Zone() {
   };
 
   const handleFieldSelect = (field: string) => {
-    // Toggle field selection
     setSelectedFields((prevFields) => {
       if (prevFields.includes(field)) {
-        return prevFields.filter((f) => f !== field); // Remove the field if already selected
+        return prevFields.filter((f) => f !== field);
       } else {
-        return [...prevFields, field]; // Add the field if not selected
+        return [...prevFields, field]; 
       }
     });
   };
@@ -271,8 +271,11 @@ function Zone() {
                 checked={selectAll}
                 onChange={handleSelectAll}
               />
-              <label htmlFor="select-all">เลือกทั้งหมด</label>
+              <label htmlFor="select-all">เลือกทั้งหมด | </label>
             </div>
+            <Link href="https://mitrphol-dashboard.ml.thetigerteamacademy.net" className="underline hover:text-sky-500">
+              แสดงผลในรูปแบบ Prediction
+            </Link>
           </div>
         </div>
       </div>
