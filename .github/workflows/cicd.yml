@@ -53,14 +53,14 @@ jobs:
           DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/fe-mitrphol-dashboard:latest
           NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
           NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
-          REDIS: ${{ secrets.REDIS }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
         run: |
           sudo apt-get update && sudo apt-get install -y sshpass
           
           echo "DOCKER_IMAGE=$DOCKER_IMAGE"
           echo "NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL"
           echo "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"
-          echo "REDIS=$REDIS"
+          echo "REDIS_URL=$REDIS_URL"
 
           sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $SSH_USERNAME@$SERVER_IP "
             docker pull $DOCKER_IMAGE && 
@@ -70,7 +70,7 @@ jobs:
               --restart unless-stopped \
               -e NEXT_PUBLIC_BASE_URL=\"$NEXT_PUBLIC_BASE_URL\" \
               -e NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=\"$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY\" \
-              -e REDIS=\"$REDIS\" \
+              -e REDIS_URL=\"$REDIS_URL\" \
               $DOCKER_IMAGE
           "
 
