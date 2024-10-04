@@ -9,7 +9,7 @@ const getData = async (zone: string) => {
   );
   
   if (!response.ok) {
-    throw new Error("Failed to fetch data");
+    throw new Error("Failed fetch data");
   }
 
   const data = await response.json();
