@@ -57,19 +57,15 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y sshpass
           
-          # Debug: Print the environment variables
           echo "DOCKER_IMAGE=$DOCKER_IMAGE"
           echo "NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL"
           echo "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"
           echo "REDIS=$REDIS"
 
           sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $SSH_USERNAME@$SERVER_IP "
-            # Pull the latest Docker image
             docker pull $DOCKER_IMAGE && 
-            # Stop and remove the existing container if it exists
             docker stop fe-mitrphol-dashboard || true && 
             docker rm fe-mitrphol-dashboard || true && 
-            # Run the new container with environment variables and automatic restart
             docker run -d --name fe-mitrphol-dashboard -p 3000:3000 \
               --restart unless-stopped \
               -e NEXT_PUBLIC_BASE_URL=\"$NEXT_PUBLIC_BASE_URL\" \
@@ -78,5 +74,4 @@ jobs:
               $DOCKER_IMAGE
           "
 
-          # Optional: Clean up old images
           sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $SSH_USERNAME@$SERVER_IP "docker image prune -f"
