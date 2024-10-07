@@ -11,21 +11,21 @@ async function fetchData(zone: string) {
   const redisUrl = process.env.REDIS_URL;
   const client = createClient({ url: redisUrl });
   const cacheKey = `${zone}_data`;
-  const fetchTimeout = 30000; 
+  const fetchTimeout = 69000; 
 
   try {
     await client.connect();
 
     const cachedData = await client.get(cacheKey);
-
     if (cachedData) {
+      console.log(`Serving cached data for zone: ${zone}`);
       return JSON.parse(cachedData);
     }
 
     const response = (await Promise.race([
       fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/${zone}`, { cache: 'no-store' }),
       timeout(fetchTimeout),
-    ])) as Response; 
+    ])) as Response;
 
     if (!response.ok) {
       throw new Error(`Failed to fetch data from external API: ${response.statusText}`);
@@ -38,12 +38,18 @@ async function fetchData(zone: string) {
     return apiData;
   } catch (error: any) {
     console.error("Error fetching data:", error);
+
+    const fallbackData = await client.get(cacheKey);
+    if (fallbackData) {
+      console.warn("Returning cached data due to external API failure");
+      return JSON.parse(fallbackData);
+    }
+
     throw new Error(`Failed to fetch or cache data: ${error.message}`);
   } finally {
     await client.quit();
   }
 }
-
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
