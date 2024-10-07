@@ -68,9 +68,9 @@ jobs:
             docker rm fe-mitrphol-dashboard && 
             docker run -d --name fe-mitrphol-dashboard -p 3000:3000 \
               --restart unless-stopped \
-              -e NEXT_PUBLIC_BASE_URL=\"$NEXT_PUBLIC_BASE_URL\" \
-              -e NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=\"$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY\" \
-              -e REDIS_URL=\"$REDIS_URL\" \
+              -e NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL \
+              -e NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY \
+              -e REDIS_URL=$REDIS_URL \
               $DOCKER_IMAGE
           "
 
