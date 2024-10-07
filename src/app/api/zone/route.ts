@@ -28,7 +28,7 @@ async function fetchData(zone: string) {
     ])) as Response;
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch data from external API: ${response.statusText}`);
+      throw new Error(`Failed to fetch from external API: ${response.statusText}`);
     }
 
     const apiData = await response.json();
