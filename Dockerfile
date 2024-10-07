@@ -4,6 +4,11 @@ FROM node:18
 # Set the working directory.
 WORKDIR /app
 
+# Define build arguments.
+ARG NEXT_PUBLIC_BASE_URL
+ARG NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+ARG REDIS_URL
+
 # Copy package.json and package-lock.json into the working directory.
 COPY package.json package-lock.json ./
 
