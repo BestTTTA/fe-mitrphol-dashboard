@@ -68,28 +68,10 @@ export default function Sidebar() {
         >
           MPL
         </Link>
-        <div
+        <Link
+          href="/zone/mpk"
           className={
             pathname === "/zone/mpk"
-              ? "active w-full h-20 shadow-sm drop-shadow-md flex justify-center items-center rounded-md bg-gray-100 font-bold"
-              : "text-gray-300 w-full h-20 shadow-sm drop-shadow-md flex justify-center items-center rounded-md bg-gray-100 font-bold"
-          }
-        >
-          MPK
-        </div>
-        <div
-          className={
-            pathname === "/zone/mks"
-              ? "active w-full h-20 shadow-sm drop-shadow-md flex justify-center items-center rounded-md bg-gray-100 font-bold"
-              : "text-gray-300 w-full h-20 shadow-sm drop-shadow-md flex justify-center items-center rounded-md bg-gray-100 font-bold"
-          }
-        >
-          MKS
-        </div>
-        {/* <Link
-          href="/MPK"
-          className={
-            pathname === "/MPK"
               ? "active w-full h-20 shadow-sm drop-shadow-md flex justify-center items-center rounded-md bg-gray-100 font-bold"
               : "text-sky-600 w-full h-20 shadow-sm drop-shadow-md flex justify-center items-center rounded-md bg-gray-100 font-bold hover:scale-105"
           }
@@ -97,15 +79,15 @@ export default function Sidebar() {
           MPK
         </Link>
         <Link
-          href="/MKS"
+          href="/zone/mks"
           className={
-            pathname === "/MKS"
+            pathname === "/zone/mks"
               ? "active w-full h-20 shadow-sm drop-shadow-md flex justify-center items-center rounded-md bg-gray-100 font-bold"
               : "text-sky-600 w-full h-20 shadow-sm drop-shadow-md flex justify-center items-center rounded-md bg-gray-100 font-bold hover:scale-105"
           }
         >
           MKS
-        </Link> */}
+        </Link>
       </ul>
     </div>
   );
