@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useLoadScript } from "@react-google-maps/api";
+import * as XLSX from "xlsx";
 
 declare global {
   interface Window {
@@ -28,15 +29,9 @@ function Map({
   const [lessCount, setLessCount] = useState(0);
   const [equalCount, setEqualCount] = useState(0);
 
-  const matchingStandard = standard.find(
-    (std) =>
-      std.StandardZone.trim().toLowerCase() === period.trim().toLowerCase()
-  );
-
- 
   useEffect(() => {
     if (!isLoaded || loadError) return;
-  
+
     const initializeMap = () => {
       if (mapRef.current && window.google && window.google.maps) {
         const map = new window.google.maps.Map(mapRef.current, {
@@ -44,25 +39,24 @@ function Map({
           zoom: 8,
           mapTypeId: "satellite",
         });
-  
+
         let greater = 0;
         let less = 0;
         let equal = 0;
-  
+
         data.forEach((item) => {
           const [lat, lon] = item.latLon.split("-").map(parseFloat);
-  
+
           const cleanPeriod = period.trim().toLowerCase();
           const matchingStandard = standard.find(
             (std) => std.StandardZone.trim().toLowerCase() === cleanPeriod
           );
-  
+
           let isGreaterThanStandard = false;
           let isLessThanStandard = false;
-          let isEqualToStandard = true; // เริ่มต้นว่าเท่ากับมาตรฐาน
-  
+          let isEqualToStandard = true;
+
           if (matchingStandard) {
-            // ตรวจสอบฟิลด์ทุกฟิลด์ใน selectedFields
             selectedFields.forEach((field) => {
               if (
                 item[field] !== undefined &&
@@ -70,34 +64,30 @@ function Map({
               ) {
                 const itemValue = parseFloat(item[field]);
                 const standardValue = parseFloat(matchingStandard[field]);
-  
-                // ถ้าค่ามากกว่ามาตรฐาน
+
                 if (itemValue > standardValue) {
                   isGreaterThanStandard = true;
                   isEqualToStandard = false;
-                }
-                // ถ้าค่าน้อยกว่ามาตรฐาน
-                else if (itemValue < standardValue) {
+                } else if (itemValue < standardValue) {
                   isLessThanStandard = true;
                   isEqualToStandard = false;
                 }
               }
             });
           }
-  
-          // กำหนดสี marker ตามผลการเปรียบเทียบฟิลด์ทั้งหมด
-          let color = "yellow"; // เริ่มต้นว่าเท่ากับมาตรฐาน
+
+          let color = "yellow";
           if (isGreaterThanStandard && !isLessThanStandard) {
-            color = "green"; // มีฟิลด์มากกว่ามาตรฐาน แต่ไม่มีฟิลด์น้อยกว่า
+            color = "green";
             greater++;
           } else if (isLessThanStandard) {
-            color = "red"; // มีฟิลด์ที่น้อยกว่ามาตรฐาน
+            color = "red";
             less++;
           } else if (isEqualToStandard) {
-            color = "yellow"; // เท่ากับมาตรฐาน
+            color = "yellow";
             equal++;
           }
-  
+
           const marker = new window.google.maps.Marker({
             position: { lat, lng: lon },
             map,
@@ -109,7 +99,7 @@ function Map({
                 ? "http://maps.google.com/mapfiles/ms/icons/yellow-dot.png"
                 : "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
           });
-  
+
           const infoWindow = new window.google.maps.InfoWindow({
             content: `
               <div>
@@ -120,27 +110,147 @@ function Map({
               </div>
             `,
           });
-  
+
           marker.addListener("click", () => {
             infoWindow.open(map, marker);
           });
         });
-  
+
         setGreaterCount(greater);
         setLessCount(less);
         setEqualCount(equal);
       }
     };
-  
+
     initializeMap();
   }, [isLoaded, loadError, data, standard, selectedFields, period]);
+
+  const exportToExcel = () => {
+    const wsData = data.map((item) => {
+      const [lat, lon] = item.latLon.split("-");
+      return {
+        Lat: lat,
+        Lon: lon,
+        ...selectedFields.reduce((acc, field) => {
+          acc[field] = item[field];
+          return acc;
+        }, {}),
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(wsData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Map Data");
+
+    XLSX.writeFile(wb, "map_data.xlsx");
+  };
+
+  const exportLessData = () => {
+    const lessData = data.filter((item) => {
+      let isLessThanStandard = false;
+  
+      const matchingStandard = standard.find(
+        (std) =>
+          std.StandardZone.trim().toLowerCase() === period.trim().toLowerCase()
+      );
+  
+      if (matchingStandard) {
+        selectedFields.forEach((field) => {
+          if (
+            item[field] !== undefined &&
+            matchingStandard[field] !== undefined
+          ) {
+            const itemValue = parseFloat(item[field]);
+            const standardValue = parseFloat(matchingStandard[field]);
+            if (itemValue < standardValue) {
+              isLessThanStandard = true;
+            }
+          }
+        });
+      }
+  
+      return isLessThanStandard;
+    });
+  
+    // Transform data to have separate Lat and Lon columns
+    const transformedData = lessData.map((item) => {
+      const [lat, lon] = item.latLon.split("-").map(parseFloat); // Split latLon into separate values
+      return {
+        Lat: lat, // Add Lat column
+        Lon: lon, // Add Lon column
+        ...selectedFields.reduce((acc, field) => {
+          acc[field] = item[field]; // Include selected fields
+          return acc;
+        }, {}),
+      };
+    });
+  
+    const ws = XLSX.utils.json_to_sheet(transformedData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Less Than Standard");
+  
+    XLSX.writeFile(wb, "less_than_standard.xlsx");
+  };
   
 
-  if (!isLoaded) return;
-  <div className="flex w-full h-[600px] gap-4">
-    <div className="w-[100%] h-full bg-sky-200 animate-pulse rounded-md"></div>
-    <div className="w-[20%] h-full bg-sky-200 animate-pulse rounded-md"></div>
-  </div>;
+  // New function to export data greater than the standard
+const exportGreaterData = () => {
+  const greaterData = data.filter((item) => {
+    let allFieldsGreaterThanStandard = true;
+
+    const matchingStandard = standard.find(
+      (std) =>
+        std.StandardZone.trim().toLowerCase() === period.trim().toLowerCase()
+    );
+
+    if (matchingStandard) {
+      selectedFields.forEach((field) => {
+        if (
+          item[field] !== undefined &&
+          matchingStandard[field] !== undefined
+        ) {
+          const itemValue = parseFloat(item[field]);
+          const standardValue = parseFloat(matchingStandard[field]);
+
+          // If any field is less than or equal to the standard, set flag to false
+          if (itemValue <= standardValue) {
+            allFieldsGreaterThanStandard = false;
+          }
+        }
+      });
+    }
+
+    return allFieldsGreaterThanStandard; // Only include if all fields are greater
+  });
+
+  // Transform data to have separate Lat and Lon columns
+  const transformedData = greaterData.map((item) => {
+    const [lat, lon] = item.latLon.split("-").map(parseFloat); // Split latLon into separate values
+    return {
+      Lat: lat, // Add Lat column
+      Lon: lon, // Add Lon column
+      ...selectedFields.reduce((acc, field) => {
+        acc[field] = item[field]; // Include selected fields
+        return acc;
+      }, {}),
+    };
+  });
+
+  const ws = XLSX.utils.json_to_sheet(transformedData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Greater Than Standard");
+
+  XLSX.writeFile(wb, "greater_than_standard.xlsx");
+};
+
+
+  if (!isLoaded)
+    return (
+      <div className="flex w-full h-[600px] gap-4">
+        <div className="w-[100%] h-full bg-sky-200 animate-pulse rounded-md"></div>
+        <div className="w-[20%] h-full bg-sky-200 animate-pulse rounded-md"></div>
+      </div>
+    );
   if (loadError)
     return <div>Error loading Google Maps: {loadError.message}</div>;
 
@@ -154,7 +264,11 @@ function Map({
   return (
     <div className="flex w-full h-full">
       <div className="w-full mt-3">
-        <div ref={mapRef} style={{ width: "100%", height: "600px" }}  className="rounded-md shadow-md drop-shadow-sm"/>
+        <div
+          ref={mapRef}
+          style={{ width: "100%", height: "600px" }}
+          className="rounded-md shadow-md drop-shadow-sm"
+        />
       </div>
       <div className="w-[20%] p-4 flex flex-col items-center">
         <div className="w-full flex flex-col justify-center items-center p-2">
@@ -185,22 +299,28 @@ function Map({
           </p>
         </div>
 
-        {matchingStandard ? (
-          <div className="p-2">
-            <p className="text-sky-600 font-bold mb-2">Standard Values</p>
-            {selectedFields && selectedFields.length > 0 ? (
-              selectedFields.map((field) => (
-                <p key={field} className="flex justify-between">
-                  <strong>{field}:</strong> {matchingStandard[field]}
-                </p>
-              ))
-            ) : (
-              <p>No fields selected.</p>
-            )}
-          </div>
-        ) : (
-          <p>No standard data available for this period.</p>
-        )}
+        <div className="mt-4 flex flex-col gap-2">
+          <button
+            className="p-2 bg-blue-500 text-white rounded-md"
+            onClick={exportToExcel}
+          >
+            Download All Data as Excel
+          </button>
+
+          <button
+            className="p-2 bg-red-500 text-white rounded-md"
+            onClick={exportLessData}
+          >
+            Download Less Than Standard
+          </button>
+
+          <button
+            className="p-2 bg-green-500 text-white rounded-md"
+            onClick={exportGreaterData}
+          >
+            Download Greater Than Standard
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -18,6 +18,7 @@ function Zone() {
     "GLI",
     "Precipitation",
     "Soilmoiture",
+    "PlantID"
   ]);
   const [selectAll, setSelectAll] = useState<boolean>(true);
 
@@ -163,10 +164,12 @@ function Zone() {
 
   const calculatedAverages = Object.keys(groupedData).map((key) => {
     const group = groupedData[key];
-    const averageValues = calculateAverages(group); // ส่งผ่านข้อมูลที่ถูกคำนวณค่าเฉลี่ย
+    const averageValues = calculateAverages(group); 
+    const plantID = group.length > 0 ? group[0].PlantID : "";
     return {
       latLon: key,
       ...averageValues,
+      PlantID: plantID,
     };
   });
   
@@ -311,6 +314,7 @@ export interface Entity {
   Lat: number;
   Lon: number;
   Date: string;
+  PlantID: string;
 }
 
 export interface Response {
