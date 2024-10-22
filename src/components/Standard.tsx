@@ -4,10 +4,10 @@ import { IoIosSave } from "react-icons/io";
 import { AiOutlineReload } from "react-icons/ai";
 
 const defaultValues = {
-  "StemElongation": { ndvi: 0.354788, ndwi: -0.30149, gli: -2920000, precipitation: 7.002696, soilmoisture: 0.63901 },
-  "Emergence": { ndvi: 0.156771, ndwi: -0.187685, gli: -2650000, precipitation: 0.253079, soilmoisture: 0.511256 },
-  "Maturity": { ndvi: 0.286034, ndwi: -0.240726, gli: -4390000, precipitation: 2.383508, soilmoisture: 0.711496 },
-  "Tillering": { ndvi: 0.218021, ndwi: -0.221464, gli: -2770000, precipitation: 1.896649, soilmoisture: 0.464787 },
+  "StemElongation": { ndvi: 0.354788, ndwi: -0.30149, gli: -2920000, precipitation: 7.002696, soilmoiture: 0.63901 },
+  "Emergence": { ndvi: 0.156771, ndwi: -0.187685, gli: -2650000, precipitation: 0.253079, soilmoiture: 0.511256 },
+  "Maturity": { ndvi: 0.286034, ndwi: -0.240726, gli: -4390000, precipitation: 2.383508, soilmoiture: 0.711496 },
+  "Tillering": { ndvi: 0.218021, ndwi: -0.221464, gli: -2770000, precipitation: 1.896649, soilmoiture: 0.464787 },
 };
 
 const EditableField = ({
@@ -61,7 +61,7 @@ const StandardItemCard = ({ standardItem, index }) => {
     ndwi: false,
     gli: false,
     precipitation: false,
-    soilmoisture: false,
+    soilmoiture: false,
   });
 
   useEffect(() => {
@@ -108,6 +108,7 @@ const StandardItemCard = ({ standardItem, index }) => {
   }
 
   async function resetToDefault(attribute) {
+    console.log(attribute)
     // ตรวจสอบว่า standardItem มีข้อมูลและเป็น array
     if (!standardItem || !Array.isArray(standardItem) || standardItem.length === 0) {
       console.error("Invalid or missing standardItem:", standardItem);
@@ -138,7 +139,7 @@ const StandardItemCard = ({ standardItem, index }) => {
       case "precipitation":
         setPrecipitation(defaultValue);
         break;
-      case "soilmoisture":
+      case "soilmoiture":
         setSoilmoisture(defaultValue);
         break;
       default:
@@ -160,8 +161,6 @@ const StandardItemCard = ({ standardItem, index }) => {
       console.error(`Error resetting ${attribute} to default:`, error);
     }
   }
-    
-  
   
   return (
     <div key={index} className="flex w-full gap-4 justify-evenly">
@@ -212,13 +211,13 @@ const StandardItemCard = ({ standardItem, index }) => {
       <EditableField
         label="Soilmoisture"
         value={soilmoisture}
-        isEditing={isEditing.soilmoisture}
+        isEditing={isEditing.soilmoiture}
         onEditClick={() =>
-          setIsEditing((prevState) => ({ ...prevState, soilmoisture: true }))
+          setIsEditing((prevState) => ({ ...prevState, soilmoiture: true }))
         }
-        onSaveClick={() => updateStandard("Soilmoisture", soilmoisture)}
+        onSaveClick={() => updateStandard("Soilmoiture", soilmoisture)}
         onChange={(e) => setSoilmoisture(e.target.value)}
-        onResetClick={() => resetToDefault("Soilmoisture")}
+        onResetClick={() => resetToDefault("Soilmoiture")}
       />
     </div>
   );
