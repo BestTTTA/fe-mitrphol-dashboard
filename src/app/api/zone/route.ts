@@ -11,7 +11,7 @@ async function fetchData(zone: string) {
   const redisUrl = process.env.REDIS_URL;
   const client = createClient({ url: redisUrl });
   const cacheKey = `${zone}_data`;
-  const fetchTimeout = 69000; 
+  const fetchTimeout = 120000; 
 
   try {
     await client.connect();
@@ -33,7 +33,7 @@ async function fetchData(zone: string) {
 
     const apiData = await response.json();
 
-    await client.setEx(cacheKey, 86400, JSON.stringify(apiData));
+    await client.setEx(cacheKey, 604800, JSON.stringify(apiData));
 
     return apiData;
   } catch (error: any) {

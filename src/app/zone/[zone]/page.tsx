@@ -284,8 +284,9 @@ function Zone() {
       </div>
       {loading ? (
         <div className="flex w-full h-[700px] gap-4">
-          <div className="w-[100%] h-full bg-sky-200 animate-pulse rounded-md flex justify-center items-center">
+          <div className="flex flex-col w-[100%] h-full bg-sky-200 animate-pulse rounded-md justify-center items-center">
             <p className="text-2xl text-sky-600">กำลังเตรียมพร้อมข้อมูล...</p>
+            <p className="text-sm text-gray-600">*หมายเหตุ การเตรียมพร้อมข้อมูลอาจใช้เวลามากกว่า 1 นาที</p>
           </div>
           <div className="w-[20%] h-full bg-sky-200 animate-pulse rounded-md"></div>
         </div>
