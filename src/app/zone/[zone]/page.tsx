@@ -35,15 +35,25 @@ function Zone() {
 
   const dataFetchedRef = useRef(false);
   const standardDataFetchedRef = useRef(false);
+  const maxRetries = 5;
 
-  useEffect(() => {
-    async function loadData() {
+   useEffect(() => {
+    async function loadData(retries = 0, delay = 500) {
       try {
         const response = await fetch(`/api/zone?zone=${zone}`);
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`);
+        }
         const data = await response.json();
         setParsedData(data);
       } catch (error) {
         console.error("Error fetching data:", error);
+        if (retries < maxRetries) {
+          // Retry after a delay if max retries not reached
+          setTimeout(() => loadData(retries + 1, delay * 2), delay);
+        } else {
+          console.error("Max retries reached");
+        }
       } finally {
         setLoading(false);
       }
@@ -55,7 +65,6 @@ function Zone() {
       dataFetchedRef.current = true;
     }
   }, [zone]);
-
   useEffect(() => {
     async function loadStandardData() {
       try {
@@ -277,7 +286,7 @@ function Zone() {
               <label htmlFor="select-all">เลือกทั้งหมด | </label>
             </div>
             <Link href="https://mitrphol-dashboard.ml.thetigerteamacademy.net" className="underline hover:text-sky-500">
-              แสดงผลในรูปแบบ Prediction
+            Machine Learning Prediction
             </Link>
           </div>
         </div>
