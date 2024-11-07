@@ -18,7 +18,7 @@ function Zone() {
     "GLI",
     "Precipitation",
     "Soilmoiture",
-    "PlantID"
+    "PlantID",
   ]);
   const [selectAll, setSelectAll] = useState<boolean>(true);
 
@@ -37,7 +37,7 @@ function Zone() {
   const standardDataFetchedRef = useRef(false);
   const maxRetries = 5;
 
-   useEffect(() => {
+  useEffect(() => {
     async function loadData(retries = 0, delay = 500) {
       try {
         const response = await fetch(`/api/zone?zone=${zone}`);
@@ -119,61 +119,65 @@ function Zone() {
     {} as { [key: string]: Entity[] }
   );
 
-  const calculateAverages = useCallback((data: Entity[]) => {
-    const sum: { [key: string]: number } = {
-      NDVI: 0,
-      NDWI: 0,
-      GLI: 0,
-      Precipitation: 0,
-      Soilmoiture: 0,
-    };
-  
-    const count: { [key: string]: number } = {
-      NDVI: 0,
-      NDWI: 0,
-      GLI: 0,
-      Precipitation: 0,
-      Soilmoiture: 0,
-    };
-  
-    data.forEach((item) => {
-      // ตรวจสอบค่าที่ถูกเลือกใน selectedFields และคำนวณเฉพาะค่าที่ถูกเลือก
-      if (selectedFields.includes("NDVI") && item.NDVI) {
-        sum.NDVI += parseFloat(item.NDVI.toString());
-        count.NDVI += 1;
-      }
-      if (selectedFields.includes("NDWI") && item.NDWI) {
-        sum.NDWI += parseFloat(item.NDWI.toString());
-        count.NDWI += 1;
-      }
-      if (selectedFields.includes("GLI") && item.GLI) {
-        sum.GLI += parseFloat(item.GLI.toString());
-        count.GLI += 1;
-      }
-      if (selectedFields.includes("Precipitation") && item.Precipitation) {
-        sum.Precipitation += parseFloat(item.Precipitation.toString());
-        count.Precipitation += 1;
-      }
-      if (selectedFields.includes("Soilmoiture") && item.Soilmoiture) {
-        sum.Soilmoiture += parseFloat(item.Soilmoiture.toString());
-        count.Soilmoiture += 1;
-      }
-    });
-  
-    // คืนค่าเฉลี่ยเฉพาะค่าที่ถูกเลือก
-    return {
-      NDVI: count.NDVI > 0 ? sum.NDVI / count.NDVI : 0,
-      NDWI: count.NDWI > 0 ? sum.NDWI / count.NDWI : 0,
-      GLI: count.GLI > 0 ? sum.GLI / count.GLI : 0,
-      Precipitation: count.Precipitation > 0 ? sum.Precipitation / count.Precipitation : 0,
-      Soilmoiture: count.Soilmoiture > 0 ? sum.Soilmoiture / count.Soilmoiture : 0,
-    };
-  }, [selectedFields]); // เพิ่ม selectedFields เข้าไปใน dependency array
-  
+  const calculateAverages = useCallback(
+    (data: Entity[]) => {
+      const sum: { [key: string]: number } = {
+        NDVI: 0,
+        NDWI: 0,
+        GLI: 0,
+        Precipitation: 0,
+        Soilmoiture: 0,
+      };
+
+      const count: { [key: string]: number } = {
+        NDVI: 0,
+        NDWI: 0,
+        GLI: 0,
+        Precipitation: 0,
+        Soilmoiture: 0,
+      };
+
+      data.forEach((item) => {
+        // ตรวจสอบค่าที่ถูกเลือกใน selectedFields และคำนวณเฉพาะค่าที่ถูกเลือก
+        if (selectedFields.includes("NDVI") && item.NDVI) {
+          sum.NDVI += parseFloat(item.NDVI.toString());
+          count.NDVI += 1;
+        }
+        if (selectedFields.includes("NDWI") && item.NDWI) {
+          sum.NDWI += parseFloat(item.NDWI.toString());
+          count.NDWI += 1;
+        }
+        if (selectedFields.includes("GLI") && item.GLI) {
+          sum.GLI += parseFloat(item.GLI.toString());
+          count.GLI += 1;
+        }
+        if (selectedFields.includes("Precipitation") && item.Precipitation) {
+          sum.Precipitation += parseFloat(item.Precipitation.toString());
+          count.Precipitation += 1;
+        }
+        if (selectedFields.includes("Soilmoiture") && item.Soilmoiture) {
+          sum.Soilmoiture += parseFloat(item.Soilmoiture.toString());
+          count.Soilmoiture += 1;
+        }
+      });
+
+      // คืนค่าเฉลี่ยเฉพาะค่าที่ถูกเลือก
+      return {
+        NDVI: count.NDVI > 0 ? sum.NDVI / count.NDVI : 0,
+        NDWI: count.NDWI > 0 ? sum.NDWI / count.NDWI : 0,
+        GLI: count.GLI > 0 ? sum.GLI / count.GLI : 0,
+        Precipitation:
+          count.Precipitation > 0 ? sum.Precipitation / count.Precipitation : 0,
+        Soilmoiture:
+          count.Soilmoiture > 0 ? sum.Soilmoiture / count.Soilmoiture : 0,
+      };
+    },
+    [selectedFields]
+  ); // เพิ่ม selectedFields เข้าไปใน dependency array
 
   const calculatedAverages = Object.keys(groupedData).map((key) => {
     const group = groupedData[key];
-    const averageValues = calculateAverages(group); 
+    const averageValues = calculateAverages(group);
     const plantID = group.length > 0 ? group[0].PlantID : "";
     return {
       latLon: key,
@@ -181,7 +185,7 @@ function Zone() {
       PlantID: plantID,
     };
   });
-  
+
   const filteredStandard = standardData.filter((standard) => {
     return standard.StandardZone === selectedPeriod;
   });
@@ -206,11 +210,10 @@ function Zone() {
       if (prevFields.includes(field)) {
         return prevFields.filter((f) => f !== field);
       } else {
-        return [...prevFields, field]; 
+        return [...prevFields, field];
       }
     });
   };
-  
 
   return (
     <main className="w-full p-4">
@@ -285,8 +288,11 @@ function Zone() {
               />
               <label htmlFor="select-all">เลือกทั้งหมด | </label>
             </div>
-            <Link href="https://mitrphol-dashboard.ml.thetigerteamacademy.net" className="underline hover:text-sky-500">
-            Machine Learning Prediction
+            <Link
+              href="https://mitrphol-dashboard.ml.thetigerteamacademy.net"
+              className="underline hover:text-sky-500"
+            >
+              Machine Learning Prediction
             </Link>
           </div>
         </div>
@@ -295,7 +301,9 @@ function Zone() {
         <div className="flex w-full h-[700px] gap-4">
           <div className="flex flex-col w-[100%] h-full bg-sky-200 animate-pulse rounded-md justify-center items-center">
             <p className="text-2xl text-sky-600">กำลังเตรียมพร้อมข้อมูล...</p>
-            <p className="text-sm text-gray-600">*หมายเหตุ การเตรียมพร้อมข้อมูลอาจใช้เวลามากกว่า 1 นาที</p>
+            <p className="text-sm text-gray-600">
+              *หมายเหตุ การเตรียมพร้อมข้อมูลอาจใช้เวลามากกว่า 1 นาที
+            </p>
           </div>
           <div className="w-[20%] h-full bg-sky-200 animate-pulse rounded-md"></div>
         </div>
